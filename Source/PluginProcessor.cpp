@@ -104,7 +104,6 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     int maxLoopLen = static_cast<int>(getSampleRate() * 1.5);
     int currentLoopLen = static_cast<int>(minLoopLen + knobVal * (maxLoopLen - minLoopLen));
 
-    // Pitch ratio factor
     float pitchRatio = std::pow (2.0f, frzPitch / 12.0f);
 
     auto* channelL = buffer.getWritePointer (0);
@@ -133,7 +132,6 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
         if (isFrozen)
         {
-            // Lettura del loop con pitch shift applicato
             float loopPos = std::fmod ((float)i * pitchRatio, (float)currentLoopLen);
             int readHead = (freezeStartHead + static_cast<int>(loopPos)) % bufferSize;
             if (readHead < 0) readHead += bufferSize;
@@ -141,7 +139,6 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
             float frzL = circularBufferLeft[readHead];
             float frzR = circularBufferRight[readHead];
 
-            // Effetto Smear (interpolazione/sfumatura granulare sul loop)
             if (smearVal > 0.0f)
             {
                 int smearOffset = static_cast<int>(smearVal * 1000.0f) % bufferSize;
@@ -150,7 +147,6 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
                 frzR = frzR * (1.0f - smearVal * 0.5f) + circularBufferRight[smearHead] * (smearVal * 0.5f);
             }
 
-            // Effetto Reducer (Bit-crushing / Quantizzazione della risoluzione)
             if (reducerBits < 16.0f)
             {
                 float steps = std::pow (2.0f, reducerBits);
@@ -158,12 +154,10 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
                 frzR = std::floor (frzR * steps) / steps;
             }
 
-            // Freeze Mix
             processedL = juce::jmap (frzMix, inL, frzL);
             processedR = juce::jmap (frzMix, inR, frzR);
         }
 
-        // Master Mix & Output Gain
         float finalL = juce::jmap (masterMix, inL, processedL) * outGain;
         float finalR = juce::jmap (masterMix, inR, processedR) * outGain;
 
