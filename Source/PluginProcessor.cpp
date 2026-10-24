@@ -6,6 +6,8 @@ StuckFreezeAudioProcessor::StuckFreezeAudioProcessor()
                                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
        parameters (*this, nullptr, "PARAMETERS", createParameterLayout())
 {
+    freezeParam = parameters.getRawParameterValue ("FREEZE");
+    sizeParam   = parameters.getRawParameterValue ("SIZE");
 }
 
 StuckFreezeAudioProcessor::~StuckFreezeAudioProcessor() {}
@@ -62,11 +64,8 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    auto* freezeParam = parameters.getRawParameterValue("FREEZE");
-    auto* sizeParam   = parameters.getRawParameterValue("SIZE");
-
-    bool freezeState = freezeParam != nullptr && *freezeParam > 0.5f;
-    float sizeVal = sizeParam != nullptr ? *sizeParam : 0.5f;
+    bool freezeState = freezeParam != nullptr && freezeParam->load() > 0.5f;
+    float sizeVal = sizeParam != nullptr ? sizeParam->load() : 0.5f;
 
     int minLen = 512;
     int maxLen = static_cast<int>(getSampleRate() * 2.0);
