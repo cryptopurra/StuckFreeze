@@ -50,7 +50,7 @@ bool StuckFreezeAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
-    return layouts.getMainOutputChannelSet() == layouts.getInputChannelSet();
+    return layouts.getMainOutputChannelSet() == layouts.getMainInputChannelSet();
 }
 
 void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -76,6 +76,7 @@ void StuckFreezeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto* channelDataR = totalNumInputChannels > 1 ? buffer.getWritePointer (1) : nullptr;
 
     for (int i = 0; i < buffer.getNumSamples(); ++i)
+    5
     {
         float inL = channelDataL[i];
         float inR = channelDataR != nullptr ? channelDataR[i] : inL;
