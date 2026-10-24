@@ -37,17 +37,31 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    std::atomic<float>* freezeParam = nullptr;
-    std::atomic<float>* sizeParam = nullptr;
+    // Parametri
+    std::atomic<float>* stutterKnobParam = nullptr;
+    std::atomic<float>* freezeButtonParam = nullptr;
 
+    std::atomic<float>* freeTimeParam = nullptr;
+    std::atomic<float>* smoothParam   = nullptr;
+    std::atomic<float>* pitchParam    = nullptr;
+    std::atomic<float>* lowCutParam   = nullptr;
+    std::atomic<float>* keyOctParam   = nullptr;
+
+    std::atomic<float>* smearParam     = nullptr;
+    std::atomic<float>* freezePitchP   = nullptr;
+    std::atomic<float>* reducerParam   = nullptr;
+    std::atomic<float>* freezeMixParam = nullptr;
+    std::atomic<float>* masterMixParam = nullptr;
+    std::atomic<float>* outputParam    = nullptr;
+
+    // Buffer di Freeze / Loop
     std::vector<float> circularBufferLeft;
     std::vector<float> circularBufferRight;
     int writeHead = 0;
     int bufferSize = 0;
-    
+
     bool isFrozen = false;
     int freezeStartHead = 0;
-    int currentLoopLength = 44100;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StuckFreezeAudioProcessor)
 };
