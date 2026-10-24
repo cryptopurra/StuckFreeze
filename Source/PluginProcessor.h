@@ -37,6 +37,9 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    std::atomic<float>* freezeParam = nullptr;
+    std::atomic<float>* sizeParam = nullptr;
+
     std::vector<float> circularBufferLeft;
     std::vector<float> circularBufferRight;
     int writeHead = 0;
