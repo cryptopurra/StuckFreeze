@@ -122,3 +122,9 @@ void StuckFreezeAudioProcessor::setStateInformation (const void* data, int sizeI
     if (xmlState != nullptr && xmlState->hasTagName (parameters.state.getType()))
         parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
 }
+
+// Funzione di creazione obbligatoria per JUCE
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new StuckFreezeAudioProcessor();
+}
