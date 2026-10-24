@@ -1,67 +1,65 @@
 #pragma once
+#include <juce_audio_utils/juce_audio_utils.h>
+#include <juce_dsp/juce_dsp.h>
+#include <array>
+#include <vector>
+#include "StutterEngine.h"
+#include "FreezeEngine.h"
 
-#include <juce_audio_processors/juce_audio_processors.h>
-
-class StuckFreezeAudioProcessor : public juce::AudioProcessor
+class StuckFreezeProcessor : public juce::AudioProcessor
 {
 public:
-    StuckFreezeAudioProcessor();
-    ~StuckFreezeAudioProcessor() override;
+    StuckFreezeProcessor();
+    ~StuckFreezeProcessor() override = default;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
-    void releaseResources() override;
+    void releaseResources() override {}
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override;
+    bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override;
+    const juce::String getName() const override { return "StuckFreeze"; }
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    double getTailLengthSeconds() const override { return 2.0; }
 
-    bool acceptsMidi() const override;
-    bool producesMidi() const override;
-    bool isMidiEffect() const override;
-    double getTailLengthSeconds() const override;
-
-    int getNumPrograms() override;
-    int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram (int) override {}
+    const juce::String getProgramName (int) override { return {}; }
+    void changeProgramName (int, const juce::String&) override {}
 
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    juce::AudioProcessorValueTreeState parameters;
+    juce::AudioProcessorValueTreeState apvts;
+
+    // letti dall'interfaccia (meter e display)
+    std::atomic<float> inLevel { 0.0f }, outLevel { 0.0f }, loopMs { 0.0f },
+                       sliceDenom { 0.0f }, rideProgress { 0.0f };
+    std::atomic<bool>  rideActive { false }, rideDone { false };
+
+    // ---- inviluppi disegnabili del Freeze (0 = Speed, 1 = Pitch, 2 = Smear) ----
+    static constexpr int envRes = 128;
+    std::array<std::atomic<float>, 3 * envRes> envTable;
+    std::vector<juce::Point<float>> envPoints[3];     // usati solo dall'interfaccia
+    std::atomic<float> envPhase { -1.0f };
+    void setEnvPoints (int idx, std::vector<juce::Point<float>> pts);
+    float envValue (int idx, float phase) const;
 
 private:
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    float get (const char* id) const { return apvts.getRawParameterValue (id)->load(); }
 
-    // Parametri
-    std::atomic<float>* stutterKnobParam = nullptr;
-    std::atomic<float>* freezeButtonParam = nullptr;
+    bool prevGo = false, prevFreeze = false;
+    double envPos = 0.0;
+    double rideElapsed = 0.0, rideTotal = 1.0;
 
-    std::atomic<float>* freeTimeParam = nullptr;
-    std::atomic<float>* smoothParam   = nullptr;
-    std::atomic<float>* pitchParam    = nullptr;
-    std::atomic<float>* lowCutParam   = nullptr;
-    std::atomic<float>* keyOctParam   = nullptr;
+    StutterEngine stutter[2];
+    FreezeEngine  freeze[2];
 
-    std::atomic<float>* smearParam     = nullptr;
-    std::atomic<float>* freezePitchP   = nullptr;
-    std::atomic<float>* reducerParam   = nullptr;
-    std::atomic<float>* freezeMixParam = nullptr;
-    std::atomic<float>* masterMixParam = nullptr;
-    std::atomic<float>* outputParam    = nullptr;
-
-    // Buffer di Freeze / Loop
-    std::vector<float> circularBufferLeft;
-    std::vector<float> circularBufferRight;
-    int writeHead = 0;
-    int bufferSize = 0;
-
-    bool isFrozen = false;
-    int freezeStartHead = 0;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StuckFreezeAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StuckFreezeProcessor)
 };
